@@ -1,69 +1,10 @@
 :root {
-  --primary: #1976d2;
-  --success: #2e7d32;
-  --danger: #c62828;
-  --bg: #f4f6f8;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, sans-serif;
-  background: var(--bg);
-  margin: 0;
-  padding: 20px;
-  text-align: center;
-}
-
-.container {
-  max-width: 500px;
-  margin: 0 auto;
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-select, .btn {
-  width: 100%;
-  padding: 15px;
-  margin: 10px 0;
-  font-size: 1.1rem;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
-select {
-  border: 2px solid #ccc;
-  font-weight: bold;
-}
-
-.btn {
-  font-weight: bold;
-  color: white;
-  border: none;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-
-.btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-blue { background: var(--primary); }
-.btn-green { background: var(--success); }
-.btn-red { background: var(--danger); }
-
-.alumno-display {
-  font-size: 2rem;
-  margin: 30px 0;
-  min-height: 80px;
-}
-
-:root {
-  --primary: #1976d2;
-  --success: #2e7d32;
-  --danger: #c62828;
-  --bg: #f4f6f8;
+  --primary: #74ACDF;      /* Celeste Bandera */
+  --secondary: #0A4D8C;    /* Azul Profundo */
+  --accent: #F6B40E;       /* Amarillo Sol de Mayo */
+  --success: #2e7d32;      /* Verde Presente */
+  --danger: #c62828;       /* Rojo Ausente */
+  --bg: #F8F9FA;           /* Fondo gris casi blanco */
 }
 
 body {
@@ -72,23 +13,33 @@ body {
   margin: 0;
   padding: 0;
   text-align: center;
+  color: #333;
 }
 
-/* Estilos de la Barra de Navegación */
+/* Forzar color en todos los títulos para que no desaparezcan */
+h1, h2, h3, h4 {
+  color: var(--secondary);
+}
+
+/* =========================================
+   BARRA DE NAVEGACIÓN
+   ========================================= */
 .navbar {
   display: flex;
   justify-content: center;
-  background-color: #ffffff;
+  background-color: var(--primary);
   padding: 10px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   z-index: 100;
   gap: 10px;
+  border-bottom: 3px solid var(--accent);
 }
 
 .nav-btn {
-  background: #e0e0e0;
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
   border: none;
   padding: 10px 15px;
   border-radius: 6px;
@@ -98,7 +49,7 @@ body {
 }
 
 .nav-btn.active {
-  background: var(--primary);
+  background: var(--secondary);
   color: white;
 }
 
@@ -107,6 +58,9 @@ body {
   color: #b71c1c;
 }
 
+/* =========================================
+   FORMULARIOS Y CONTENEDORES GLOBALES
+   ========================================= */
 .container {
   max-width: 500px;
   margin: 30px auto;
@@ -116,7 +70,8 @@ body {
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-select, input[type="text"], input[type="email"], input[type="password"], .btn {
+/* Corrección de inputs oscuros */
+select, input[type="text"], input[type="email"], input[type="password"], input[type="date"], textarea, .btn {
   width: 100%;
   padding: 15px;
   margin: 10px 0;
@@ -124,18 +79,25 @@ select, input[type="text"], input[type="email"], input[type="password"], .btn {
   border-radius: 8px;
   box-sizing: border-box;
   border: 2px solid #ccc;
+  background-color: #ffffff; /* Obliga a fondo blanco */
+  color: #333333; /* Obliga a texto oscuro */
 }
 
 select {
   font-weight: bold;
+  cursor: pointer;
 }
 
+/* =========================================
+   BOTONES
+   ========================================= */
 .btn {
   font-weight: bold;
   color: white;
   border: none;
   cursor: pointer;
   text-transform: uppercase;
+  transition: all 0.2s;
 }
 
 .btn:disabled {
@@ -143,21 +105,33 @@ select {
   cursor: not-allowed;
 }
 
-.btn-blue { background: var(--primary); }
-.btn-green { background: var(--success); }
-.btn-red { background: var(--danger); }
-.btn-gray { background: #757575; }
+.btn-blue {
+  background-color: var(--primary);
+  color: var(--secondary);
+  border: 1px solid var(--secondary);
+}
 
+.btn-blue:hover {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.btn-green { background: var(--success); border: 1px solid #1b5e20;}
+.btn-red { background: var(--danger); border: 1px solid #b71c1c;}
+.btn-gray { background: #757575; border: 1px solid #424242;}
+
+/* =========================================
+   TOMA DE ASISTENCIA
+   ========================================= */
 .alumno-display {
   font-size: 2rem;
   margin: 30px 0;
   min-height: 80px;
 }
-/* =========================================
-   ESTILOS RESPONSIVE (MÓVILES) Y TABLAS
-   ========================================= */
 
-/* Hacemos que la tabla no rompa la pantalla en celulares */
+/* =========================================
+   TABLAS Y DISEÑO RESPONSIVO (MÓVILES)
+   ========================================= */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -170,7 +144,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  min-width: 400px; /* Asegura que la tabla no se aplaste de más */
+  min-width: 400px; 
 }
 
 th, td {
@@ -180,7 +154,7 @@ th, td {
 }
 
 th {
-  background-color: var(--primary);
+  background-color: var(--secondary);
   color: white;
   font-weight: bold;
 }
@@ -196,7 +170,6 @@ tr:hover {
   font-size: 0.9rem;
 }
 
-/* Reglas específicas para pantallas de celular */
 @media (max-width: 600px) {
   .container {
     margin: 10px;
@@ -204,7 +177,7 @@ tr:hover {
   }
   
   .nav-btn {
-    flex: 1 1 45%; /* Los botones del menú ocuparán la mitad de la pantalla */
+    flex: 1 1 45%; 
     margin: 3px;
     font-size: 0.85rem;
     padding: 10px;
@@ -217,8 +190,9 @@ tr:hover {
     font-size: 1.5rem;
   }
 }
+
 /* =========================================
-   ESTILOS PARA TARJETAS DE CURSOS
+   TARJETAS DE CURSOS
    ========================================= */
 .cards-grid {
   display: grid;
@@ -252,36 +226,92 @@ tr:hover {
 }
 
 /* =========================================
-   EFECTO HERO Y FONDO CENS
+   EFECTO HERO BANDERA ANIMADA
    ========================================= */
-body {
-  background-color: #f4f7f6; /* Fondo gris muy suave para descansar la vista */
-}
-
-.hero-banner {
-  /* Imagen de escritorio/estudio nocturno ideal para CENS, con filtro azul marino/purpura */
-  background: linear-gradient(rgba(26, 35, 126, 0.85), rgba(74, 20, 140, 0.85)), 
-              url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000') center/cover no-repeat;
-  color: white;
-  padding: 40px 20px;
+/* =========================================
+   EFECTO HERO BANDERA ARGENTINA
+   ========================================= */
+.hero-bandera {
+  position: relative;
+  overflow: hidden;
+  background-color: #FFFFFF; 
+  padding: 50px 20px;
   border-radius: 12px;
   margin-bottom: 30px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  text-align: center;
-  border-bottom: 4px solid #d4af37; /* Detalle dorado haciendo juego con el logo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  border: 1px solid #b0d4f1;
 }
 
-.hero-banner h1 {
-  color: white;
-  margin-top: 0;
-  font-size: 2.2rem;
-  letter-spacing: 1px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+/* Franja Celeste Superior */
+.hero-bandera::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -10%;
+  width: 120%;
+  height: 33.33%;
+  background-color: #74ACDF; 
+  animation: ondear 6s ease-in-out infinite alternate;
+  z-index: 1;
 }
 
-.hero-banner p {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  max-width: 600px;
-  margin: 0 auto;
+/* Franja Celeste Inferior */
+.hero-bandera::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -10%;
+  width: 120%;
+  height: 33.33%;
+  background-color: #74ACDF; 
+  animation: ondear 6s ease-in-out infinite alternate-reverse;
+  z-index: 1;
+}
+
+/* Sol de Mayo Central */
+.sol-de-mayo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background-color: #F6B40E; 
+  border-radius: 50%;
+  box-shadow: 0 0 25px rgba(246, 180, 14, 0.9);
+  z-index: 2; /* Queda por encima de las franjas de fondo */
+  animation: latir-sol 4s infinite alternate;
+}
+
+/* Caja de contenido translúcida y elegante */
+.hero-content {
+  position: relative;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.45); /* Mucho más transparente para ver el sol y la bandera */
+  padding: 25px 35px;
+  border-radius: 12px;
+  backdrop-filter: blur(9px); /* Efecto vidrio esmerilado profundo */
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  max-width: 550px;
+  width: 90%;
+}
+
+.hero-content h1, 
+.hero-content p {
+  text-shadow: 0 1px 3px rgba(214, 214, 214, 0.9); /* Sombra clara para proteger la lectura */
+}
+
+@keyframes ondear {
+  0% { transform: translateX(0) skewY(-0.5deg); }
+  100% { transform: translateX(-5%) skewY(0.4deg); }
+}
+
+@keyframes latir-sol {
+  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
 }

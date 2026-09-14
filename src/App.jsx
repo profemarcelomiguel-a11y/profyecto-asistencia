@@ -44,7 +44,7 @@ function App() {
   const [reporte, setReporte] = useState([]);
   const [nuevoAlumnoNombre, setNuevoAlumnoNombre] = useState('');
   const [fechaAsistencia, setFechaAsistencia] = useState(new Date().toISOString().split('T')[0]);
-  const [usarVoz, setUsarVoz] = useState(true); // Control global de voz desde el inicio
+  const [usarVoz, setUsarVoz] = useState(true); 
   
   const [estadisticas, setEstadisticas] = useState([]);
   const [totalClasesCurso, setTotalClasesCurso] = useState(0);
@@ -231,7 +231,6 @@ function App() {
     }
   };
 
-  // --- MOTOR DE ASISTENCIA Y VOZ ---
   const hablar = (texto) => { 
     if (!usarVoz) return; 
     if ('speechSynthesis' in window) { 
@@ -327,15 +326,12 @@ function App() {
     if (!error && data) { const nuevaLista = [...alumnos]; nuevaLista.splice(indiceActual + 1, 0, data[0]); setAlumnos(nuevaLista); setNuevoAlumnoNombre(''); alert("Alumno agregado."); }
   };
 
-  // ==========================================
-  // RENDERIZADO
-  // ==========================================
   if (!session) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div className="container" style={{ width: '100%', maxWidth: '400px', margin: 0 }}>
-            <h1 style={{fontSize: '2rem', marginBottom: '20px'}}>{modoRegistro ? 'Registro Docente 📝' : 'Acceso CENS 👨‍🏫'}</h1>
+            <h1 style={{fontSize: '2rem', marginBottom: '20px', color: '#0A4D8C'}}>{modoRegistro ? 'Registro Docente 📝' : 'Acceso Docente 👨‍🏫'}</h1>
             <form onSubmit={manejarAuth}>
               <input type="email" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} required />
               <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required minLength="6" />
@@ -348,13 +344,13 @@ function App() {
             </button>
           </div>
         </main>
-        <footer style={{ backgroundColor: '#1a1a1a', color: '#fff', padding: '30px 20px 20px', textAlign: 'center', borderTop: '3px solid #d4af37' }}>
-          <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 La Cueva de Adulam. Todos los derechos reservados.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px', paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <span style={{ fontSize: '0.8rem', color: '#ccc', textTransform: 'uppercase', letterSpacing: '1px' }}>Desarrollo web con propósito</span>
+        <footer style={{ backgroundColor: '#0A4D8C', color: '#fff', padding: '30px 20px 20px', textAlign: 'center', borderTop: '4px solid #F6B40E' }}>
+          <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 Sistema de Asistencia. Todos los derechos reservados.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px', paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+            <span style={{ fontSize: '0.8rem', color: '#E5F0FA', textTransform: 'uppercase', letterSpacing: '1px' }}>Desarrollo web con propósito</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <img src="/logo-agape.png" alt="Logo Código Agape" style={{ width: '35px', height: 'auto', borderRadius: '4px' }} />
-              <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.3rem', color: '#d4af37', fontWeight: 'bold', letterSpacing: '1.5px' }}>CÓDIGO AGAPE</span>
+              <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.3rem', color: '#F6B40E', fontWeight: 'bold', letterSpacing: '1.5px' }}>CÓDIGO AGAPE</span>
             </div>
           </div>
         </footer>
@@ -369,29 +365,33 @@ function App() {
         <button className={`nav-btn ${pantalla === 'crud_escuelas' ? 'active' : ''}`} onClick={() => setPantalla('crud_escuelas')}>🏫 Inst.</button>
         <button className={`nav-btn ${pantalla === 'admin' ? 'active' : ''}`} onClick={() => {limpiarFormularioCurso(); setPantalla('admin');}}>➕ Cursos</button>
         <button className={`nav-btn ${pantalla === 'seleccion_asistencia' ? 'active' : ''}`} onClick={() => setPantalla('seleccion_asistencia')}>📋 Mis Listas</button>
-        <button className={`nav-btn ${pantalla === 'reportes' ? 'active' : ''}`} onClick={() => setPantalla('reportes')} style={{backgroundColor: pantalla === 'reportes' ? '#9c27b0' : '#e1bee7', color: pantalla === 'reportes' ? 'white' : 'black'}}>📊 Reportes</button>
+        <button className={`nav-btn ${pantalla === 'reportes' ? 'active' : ''}`} onClick={() => setPantalla('reportes')} style={{backgroundColor: pantalla === 'reportes' ? '#F6B40E' : 'transparent', color: pantalla === 'reportes' ? '#0A4D8C' : 'white'}}>📊 Reportes</button>
         <button className="nav-btn salir" onClick={cerrarSesion}>🚪</button>
       </nav>
 
-      <div className="container" style={{ maxWidth: '1000px' }}>
+      <div className="container" style={{ maxWidth: '1000px', boxShadow: 'none', background: 'transparent', padding: '0', marginTop: '20px' }}>
         
         {pantalla === 'menu' && (
           <div>
-            <div className="hero-banner">
-              <h1>Sistema de Asistencia</h1>
-              <p>Herramienta de gestión para docentes de Educación de Jóvenes y Adultos.</p>
+            <div className="hero-bandera">
+              <div className="sol-de-mayo"></div>
+              <div className="hero-content">
+                <img src="/logo-agape.png" alt="Logo Código Agape" style={{ width: '65px', height: 'auto', marginBottom: '8px', borderRadius: '8px' }} />
+                <h1 style={{ color: '#0A4D8C', margin: '0 0 5px 0', textShadow: 'none' }}>Sistema de Asistencia</h1>
+                <p style={{ color: '#0A4D8C', fontWeight: 'bold', margin: 0 }}>Herramienta de gestión para docentes de Educación de Jóvenes y Adultos.</p>
+              </div>
             </div>
             
-            <div style={{ backgroundColor: '#e3f2fd', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #90caf9', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <p style={{ margin: 0, color: '#0d47a1', fontSize: '1.1rem' }}>👨‍🏫 <strong>Profesor activo:</strong> {session?.user?.email}</p>
+            <div style={{ backgroundColor: '#fff', padding: '15px 25px', borderRadius: '12px', marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <p style={{ margin: 0, color: '#0A4D8C', fontSize: '1.1rem' }}>👨‍🏫 <strong>Profesor activo:</strong> {session?.user?.email}</p>
               
-              {/* INTERRUPTOR DE VOZ EN LA PÁGINA PRINCIPAL */}
               <button 
                 onClick={() => setUsarVoz(!usarVoz)}
                 style={{
-                  padding: '8px 15px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer',
-                  backgroundColor: usarVoz ? '#c8e6c9' : '#ffcdd2', 
-                  color: usarVoz ? '#2e7d32' : '#c62828'
+                  padding: '8px 15px', borderRadius: '8px', border: '1px solid', fontWeight: 'bold', cursor: 'pointer',
+                  backgroundColor: usarVoz ? '#e8f5e9' : '#ffebee', 
+                  color: usarVoz ? '#2e7d32' : '#c62828',
+                  borderColor: usarVoz ? '#c8e6c9' : '#ffcdd2'
                 }}
               >
                 {usarVoz ? '🔊 Voz: ACTIVADA' : '🔇 Voz: SILENCIADA'}
@@ -399,17 +399,17 @@ function App() {
             </div>
 
             <div className="cards-grid">
-              <button className="curso-card" style={{justifyContent: 'center', alignItems: 'center', backgroundColor: '#e8f5e9'}} onClick={() => {limpiarFormularioCurso(); setPantalla('admin');}}>
-                <h3 style={{color: '#2e7d32'}}>➕ Gestionar Cursos</h3>
-                <span style={{color: '#555'}}>Crear o editar materias</span>
+              <button className="curso-card" style={{justifyContent: 'center', alignItems: 'center', borderLeft: '5px solid #2e7d32'}} onClick={() => {limpiarFormularioCurso(); setPantalla('admin');}}>
+                <h3 style={{color: '#2e7d32', margin: '0 0 5px 0'}}>➕ Gestionar Cursos</h3>
+                <span style={{color: '#757575'}}>Crear o editar materias</span>
               </button>
-              <button className="curso-card" style={{justifyContent: 'center', alignItems: 'center', backgroundColor: '#e3f2fd'}} onClick={() => setPantalla('seleccion_asistencia')}>
-                <h3 style={{color: '#1565c0'}}>📋 Tomar Asistencia</h3>
-                <span style={{color: '#555'}}>Ir a mis listas de alumnos</span>
+              <button className="curso-card" style={{justifyContent: 'center', alignItems: 'center', borderLeft: '5px solid #0A4D8C'}} onClick={() => setPantalla('seleccion_asistencia')}>
+                <h3 style={{color: '#0A4D8C', margin: '0 0 5px 0'}}>📋 Tomar Asistencia</h3>
+                <span style={{color: '#757575'}}>Ir a mis listas de alumnos</span>
               </button>
-              <button className="curso-card" style={{justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3e5f5'}} onClick={() => setPantalla('reportes')}>
-                <h3 style={{color: '#7b1fa2'}}>📊 Ver Reportes</h3>
-                <span style={{color: '#555'}}>Métricas y regulares</span>
+              <button className="curso-card" style={{justifyContent: 'center', alignItems: 'center', borderLeft: '5px solid #F6B40E'}} onClick={() => setPantalla('reportes')}>
+                <h3 style={{color: '#b28900', margin: '0 0 5px 0'}}>📊 Ver Reportes</h3>
+                <span style={{color: '#757575'}}>Métricas y regulares</span>
               </button>
             </div>
           </div>
@@ -417,9 +417,9 @@ function App() {
 
         {pantalla === 'crud_escuelas' && (
           <div>
-            <h2>Gestión de Instituciones</h2>
-            <div style={{ backgroundColor: '#f4f6f8', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #ddd' }}>
-              <h3>{crudEscuelaId ? '✏️ Editar Institución' : '✨ Agregar Nueva Institución'}</h3>
+            <h2 style={{ marginBottom: '20px' }}>Gestión de Instituciones</h2>
+            <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', marginBottom: '30px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0' }}>
+              <h3 style={{ marginTop: 0 }}>{crudEscuelaId ? '✏️ Editar Institución' : '✨ Agregar Nueva Institución'}</h3>
               <input type="text" placeholder="Nombre Principal (ej. CENS 497)" value={crudNombre} onChange={e => setCrudNombre(e.target.value)} />
               <input type="text" placeholder="N° CENS (ej. 497)" value={crudCens} onChange={e => setCrudCens(e.target.value)} />
               <input type="text" placeholder="Nombre de Sede (ej. Pañol Pedro Luque)" value={crudSede} onChange={e => setCrudSede(e.target.value)} />
@@ -428,13 +428,14 @@ function App() {
               <button className="btn btn-green" onClick={guardarEscuela}>{crudEscuelaId ? 'Actualizar Institución' : 'Guardar Nueva Institución'}</button>
               {crudEscuelaId && <button className="btn btn-gray" onClick={limpiarFormularioEscuela}>Cancelar Edición</button>}
             </div>
-            <div style={{ textAlign: 'left' }}>
-              <h3>Instituciones Cargadas ({escuelas.length})</h3>
+            
+            <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0', textAlign: 'left' }}>
+              <h3 style={{ marginTop: 0 }}>Instituciones Cargadas ({escuelas.length})</h3>
               {escuelas.map(esc => (
-                <div key={esc.id} style={{ borderBottom: '1px solid #ccc', padding: '15px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div key={esc.id} style={{ borderBottom: '1px solid #eee', padding: '15px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                   <div style={{ flex: 1, minWidth: '200px' }}>
-                    <strong style={{ fontSize: '1.2rem', color: '#1976d2' }}>{esc.nombre}</strong> {esc.cens && `(CENS ${esc.cens})`}<br/>
-                    <small style={{ color: '#555' }}>📍 {esc.nombre_sede} | {esc.domicilio}, {esc.localidad}</small>
+                    <strong style={{ fontSize: '1.2rem', color: '#0A4D8C' }}>{esc.nombre}</strong> {esc.cens && `(CENS ${esc.cens})`}<br/>
+                    <small style={{ color: '#757575' }}>📍 {esc.nombre_sede} | {esc.domicilio}, {esc.localidad}</small>
                   </div>
                   <div>
                     <button className="btn btn-blue" style={{ width: 'auto', padding: '8px 12px', margin: '0 5px' }} onClick={() => editarEscuela(esc)}>✏️ Editar</button>
@@ -448,9 +449,9 @@ function App() {
 
         {pantalla === 'admin' && (
           <div>
-            <h2>Gestión de Cursos</h2>
-            <div style={{ backgroundColor: '#f4f6f8', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #ddd' }}>
-              <h3>{crudCursoId ? '✏️ Editar Curso' : '✨ Nuevo Curso y Alumnos'}</h3>
+            <h2 style={{ marginBottom: '20px' }}>Gestión de Cursos</h2>
+            <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', marginBottom: '30px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0' }}>
+              <h3 style={{ marginTop: 0 }}>{crudCursoId ? '✏️ Editar Curso' : '✨ Nuevo Curso y Alumnos'}</h3>
               <select value={adminEscuela} onChange={e => setAdminEscuela(e.target.value)}>
                 <option value="">-- Seleccionar Institución --</option>
                 {escuelas.map(esc => <option key={esc.id} value={esc.id}>{esc.nombre} - {esc.nombre_sede}</option>)}
@@ -464,21 +465,22 @@ function App() {
               <input type="text" placeholder="Días" value={nuevosDias} onChange={e => setNuevosDias(e.target.value)} />
               <input type="text" placeholder="Horarios" value={nuevosHorarios} onChange={e => setNuevosHorarios(e.target.value)} />
               {!crudCursoId && (
-                <div style={{border: '2px dashed #ccc', padding: '15px', marginTop: '15px', borderRadius: '8px'}}>
-                  <p style={{margin: '0 0 10px 0', fontWeight: 'bold'}}>📋 Copia y pega aquí la lista de alumnos</p>
+                <div style={{border: '2px dashed #ccc', padding: '15px', marginTop: '15px', borderRadius: '8px', backgroundColor: '#f9f9f9'}}>
+                  <p style={{margin: '0 0 10px 0', fontWeight: 'bold', color: '#0A4D8C'}}>📋 Copia y pega aquí la lista de alumnos</p>
                   <textarea rows="6" value={textoAlumnos} onChange={e => setTextoAlumnos(e.target.value)} style={{width: '100%', padding: '10px', boxSizing: 'border-box'}} />
                 </div>
               )}
               <button className="btn btn-green" onClick={guardarCurso}>{crudCursoId ? 'Actualizar Curso' : 'Guardar Curso y Alumnos'}</button>
               {crudCursoId && <button className="btn btn-gray" onClick={limpiarFormularioCurso}>Cancelar Edición</button>}
             </div>
-            <div style={{ textAlign: 'left' }}>
-              <h3>Mis Cursos ({cursos.length})</h3>
+            
+            <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0', textAlign: 'left' }}>
+              <h3 style={{ marginTop: 0 }}>Mis Cursos ({cursos.length})</h3>
               {cursos.map(cur => (
-                <div key={cur.id} style={{ borderBottom: '1px solid #ccc', padding: '15px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div key={cur.id} style={{ borderBottom: '1px solid #eee', padding: '15px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                   <div style={{ flex: 1, minWidth: '200px' }}>
-                    <strong style={{ fontSize: '1.2rem', color: '#1976d2' }}>{cur.materia}</strong><br/>
-                    <small style={{ color: '#555' }}>📖 {cur.nombre} {cur.comision ? `(Com ${cur.comision})` : ''} | 📍 {cur.sede}</small>
+                    <strong style={{ fontSize: '1.2rem', color: '#0A4D8C' }}>{cur.materia}</strong><br/>
+                    <small style={{ color: '#757575' }}>📖 {cur.nombre} {cur.comision ? `(Com ${cur.comision})` : ''} | 📍 {cur.sede}</small>
                   </div>
                   <div>
                     <button className="btn btn-blue" style={{ width: 'auto', padding: '8px 12px', margin: '0 5px' }} onClick={() => editarCurso(cur)}>✏️ Editar</button>
@@ -492,19 +494,19 @@ function App() {
 
         {pantalla === 'seleccion_asistencia' && (
           <div>
-            <h2>Tus Clases Asignadas</h2>
+            <h2 style={{ marginBottom: '20px' }}>Tus Clases Asignadas</h2>
             {cursos.length === 0 ? (
-              <div style={{padding: '30px', backgroundColor: '#fff3e0', borderRadius: '8px'}}>
-                <p>No tienes clases asignadas aún.</p>
-                <button className="btn btn-green" onClick={() => {limpiarFormularioCurso(); setPantalla('admin');}}>Crear mi primer curso</button>
+              <div style={{padding: '30px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                <p style={{color: '#757575', fontSize: '1.1rem'}}>No tienes clases asignadas aún.</p>
+                <button className="btn btn-green" style={{maxWidth: '300px'}} onClick={() => {limpiarFormularioCurso(); setPantalla('admin');}}>Crear mi primer curso</button>
               </div>
             ) : (
               <div className="cards-grid">
                 {cursos.map(cur => {
                   const escuela = escuelas.find(e => e.id === cur.escuela_id);
                   return (
-                    <div key={cur.id} className="curso-card">
-                      <h3 style={{marginTop: 0, color: '#1976d2', borderBottom: '2px solid #e3f2fd', paddingBottom: '10px'}}>{cur.materia}</h3>
+                    <div key={cur.id} className="curso-card" style={{borderTop: '5px solid #0A4D8C'}}>
+                      <h3 style={{marginTop: 0, color: '#0A4D8C', borderBottom: '1px solid #eee', paddingBottom: '10px'}}>{cur.materia}</h3>
                       <div className="curso-card-info">
                         <strong>🏫 Inst:</strong> {escuela?.nombre} {escuela?.cens ? `(CENS ${escuela.cens})` : ''}<br/>
                         <strong>📍 Sede:</strong> {cur.sede}<br/>
@@ -522,35 +524,37 @@ function App() {
         )}
 
         {pantalla === 'asistencia_activa' && (
-          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+          <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0' }}>
             
-            <h2 className="alumno-display" style={{ margin: '0 0 10px 0', color: '#333' }}>{alumnos[indiceActual]?.nombre_completo}</h2>
-            <p style={{ color: '#666', marginBottom: '25px' }}>Alumno {indiceActual + 1} de {alumnos.length} {usarVoz ? '🔊 (Voz activa)' : '🔇 (Silenciado)'}</p>
+            <h2 className="alumno-display" style={{ margin: '0 0 10px 0', color: '#0A4D8C' }}>{alumnos[indiceActual]?.nombre_completo}</h2>
+            <p style={{ color: '#757575', marginBottom: '25px', fontWeight: 'bold' }}>Alumno {indiceActual + 1} de {alumnos.length} {usarVoz ? '🔊 (Voz activa)' : '🔇 (Silenciado)'}</p>
             
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-              <button className="btn btn-green" style={{ flex: 1, padding: '15px', fontSize: '1.1rem' }} onClick={() => marcar('Presente')}>PRESENTE</button>
-              <button className="btn btn-blue" style={{ flex: 1, padding: '15px', fontSize: '1.1rem', backgroundColor: '#f57c00' }} onClick={() => marcar('Tarde')}>TARDE</button>
-              <button className="btn btn-red" style={{ flex: 1, padding: '15px', fontSize: '1.1rem' }} onClick={() => marcar('Ausente')}>AUSENTE</button>
+              <button className="btn btn-green" style={{ flex: 1, padding: '20px', fontSize: '1.2rem' }} onClick={() => marcar('Presente')}>PRESENTE</button>
+              <button className="btn btn-blue" style={{ flex: 1, padding: '20px', fontSize: '1.2rem', backgroundColor: '#F6B40E', color: '#0A4D8C', border: 'none' }} onClick={() => marcar('Tarde')}>TARDE</button>
+              <button className="btn btn-red" style={{ flex: 1, padding: '20px', fontSize: '1.2rem' }} onClick={() => marcar('Ausente')}>AUSENTE</button>
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn btn-gray" onClick={deshacerUltimo} disabled={indiceActual === 0} style={{ flex: 1, opacity: indiceActual === 0 ? 0.5 : 1 }}>↩️ Deshacer</button>
-              <button className="btn btn-gray" onClick={cancelarAsistencia} style={{ flex: 1, backgroundColor: '#ef5350', color: 'white' }}>❌ Cancelar</button>
+              <button className="btn btn-gray" onClick={cancelarAsistencia} style={{ flex: 1, backgroundColor: '#ef5350', color: 'white', border: 'none' }}>❌ Cancelar</button>
             </div>
 
-            <hr style={{margin: '30px 0'}} />
-            <h4>¿Llegó un alumno nuevo?</h4>
-            <input type="text" placeholder="Apellido y Nombre" value={nuevoAlumnoNombre} onChange={e => setNuevoAlumnoNombre(e.target.value)} />
-            <button className="btn btn-gray" onClick={agregarAlumnoEnCaliente}>Agregar a la lista ahora</button>
+            <hr style={{margin: '30px 0', border: 'none', borderTop: '1px solid #eee'}} />
+            <h4 style={{color: '#0A4D8C', marginTop: 0}}>¿Llegó un alumno nuevo?</h4>
+            <div style={{display: 'flex', gap: '10px'}}>
+              <input type="text" placeholder="Apellido y Nombre" value={nuevoAlumnoNombre} onChange={e => setNuevoAlumnoNombre(e.target.value)} style={{margin: 0, flex: 2}} />
+              <button className="btn btn-blue" onClick={agregarAlumnoEnCaliente} style={{margin: 0, flex: 1}}>Agregar ahora</button>
+            </div>
           </div>
         )}
 
         {pantalla === 'asistencia_revision' && (
-          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ color: '#1976d2', marginTop: 0 }}>Revisar Asistencia</h2>
-            <div style={{marginBottom: '20px', textAlign: 'left', backgroundColor: '#e3f2fd', padding: '15px', borderRadius: '8px'}}>
-              <label style={{fontWeight: 'bold'}}>📅 Fecha a guardar: </label>
-              <input type="date" value={fechaAsistencia} onChange={e => setFechaAsistencia(e.target.value)} style={{padding: '8px', borderRadius: '5px', border: '1px solid #ccc', marginLeft: '10px'}}/>
+          <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0' }}>
+            <h2 style={{ color: '#0A4D8C', marginTop: 0 }}>Revisar Asistencia</h2>
+            <div style={{marginBottom: '20px', textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px', border: '1px solid #eee'}}>
+              <label style={{fontWeight: 'bold', color: '#0A4D8C'}}>📅 Fecha a guardar: </label>
+              <input type="date" value={fechaAsistencia} onChange={e => setFechaAsistencia(e.target.value)} style={{padding: '8px', borderRadius: '5px', border: '1px solid #ccc', marginLeft: '10px', width: 'auto'}}/>
             </div>
             
             <div className="table-responsive">
@@ -565,14 +569,14 @@ function App() {
                       <tr key={al.id}>
                         <td>{al.apellido}, {al.nombre}</td>
                         <td>
-                          <select value={estadoActual} onChange={(e) => actualizarEstadoRevision(al.id, e.target.value)} style={{margin: 0, padding: '5px'}}>
+                          <select value={estadoActual} onChange={(e) => actualizarEstadoRevision(al.id, e.target.value)} style={{margin: 0, padding: '8px', width: 'auto'}}>
                             <option value="Presente">Presente</option>
                             <option value="Tarde">Tarde</option>
                             <option value="Ausente">Ausente</option>
                           </select>
                         </td>
                         <td>
-                          <button className="btn btn-red" style={{padding: '5px', margin: 0, width: 'auto'}} onClick={() => eliminarAlumnoDeCurso(al.id)}>🗑️</button>
+                          <button className="btn btn-red" style={{padding: '8px 12px', margin: 0, width: 'auto'}} onClick={() => eliminarAlumnoDeCurso(al.id)}>🗑️</button>
                         </td>
                       </tr>
                     )
@@ -581,8 +585,8 @@ function App() {
               </table>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
-              <button className="btn btn-green" onClick={guardarAsistenciaDefinitiva} style={{flex: 2, minWidth: '200px'}}>💾 CONFIRMAR Y GUARDAR</button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '30px', flexWrap: 'wrap' }}>
+              <button className="btn btn-green" onClick={guardarAsistenciaDefinitiva} style={{flex: 2, minWidth: '200px', padding: '20px'}}>💾 CONFIRMAR Y GUARDAR</button>
               <button className="btn btn-gray" onClick={cancelarAsistencia} style={{flex: 1, minWidth: '100px'}}>Descartar</button>
               <button className="btn btn-red" onClick={eliminarListaCompleta} style={{flex: 1, minWidth: '100px'}}>🗑️ Borrar Lista</button>
             </div>
@@ -590,16 +594,16 @@ function App() {
         )}
 
         {pantalla === 'resultados' && (
-          <div>
-            <h2>¡Lista Guardada! ✅</h2>
-            <p>Los datos ya están seguros en la base de datos.</p>
-            <button className="btn btn-blue" onClick={() => setPantalla('seleccion_asistencia')}>Volver a Mis Listas</button>
+          <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0' }}>
+            <h2 style={{color: '#2e7d32'}}>¡Lista Guardada! ✅</h2>
+            <p style={{fontSize: '1.2rem', color: '#555', marginBottom: '30px'}}>Los datos ya están seguros en la base de datos.</p>
+            <button className="btn btn-blue" style={{maxWidth: '300px'}} onClick={() => setPantalla('seleccion_asistencia')}>Volver a Mis Listas</button>
           </div>
         )}
 
         {pantalla === 'reportes' && (
-          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-            <h2 style={{marginTop: 0}}>Reportes del Cuatrimestre</h2>
+          <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0' }}>
+            <h2 style={{marginTop: 0, color: '#0A4D8C'}}>Reportes del Cuatrimestre</h2>
             
             <select value={escuelaId} onChange={e => { setEscuelaId(e.target.value); setCursoId(''); setEstadisticas([]); }}>
               <option value="">-- Filtrar por Institución (Opcional) --</option>
@@ -614,11 +618,11 @@ function App() {
             </select>
 
             {cursoId && estadisticas.length > 0 && (
-              <div style={{ marginTop: '20px', textAlign: 'left', backgroundColor: '#f5f5f5', padding: '15px', borderRadius: '8px' }}>
-                <p style={{margin: '0 0 10px 0', fontWeight: 'bold'}}>✏️ Editar o borrar una clase pasada:</p>
+              <div style={{ marginTop: '20px', textAlign: 'left', backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
+                <p style={{margin: '0 0 10px 0', fontWeight: 'bold', color: '#0A4D8C'}}>✏️ Editar o borrar una clase pasada:</p>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   {[...new Set(asistenciasReporte.map(a => a.fecha))].sort().map(f => (
-                    <button key={f} onClick={() => editarClasePasada(f)} className="btn btn-blue" style={{width: 'auto', padding: '8px 12px', margin: 0, fontSize: '0.9rem'}}>
+                    <button key={f} onClick={() => editarClasePasada(f)} className="btn btn-blue" style={{width: 'auto', padding: '8px 15px', margin: 0, fontSize: '0.95rem'}}>
                       {f.split('-')[2]}/{f.split('-')[1]}
                     </button>
                   ))}
@@ -628,15 +632,15 @@ function App() {
 
             {cursoId && estadisticas.length === 0 && (
               <div style={{ padding: '20px', backgroundColor: '#fff3e0', marginTop: '20px', borderRadius: '8px', border: '1px solid #ffcc80' }}>
-                <p style={{ margin: 0, color: '#e65100' }}><strong>No hay datos:</strong> Este curso no tiene alumnos registrados aún.</p>
+                <p style={{ margin: 0, color: '#e65100', fontWeight: 'bold' }}>No hay datos: Este curso no tiene alumnos registrados aún.</p>
               </div>
             )}
 
             {estadisticas.length > 0 && (
-              <div style={{ marginTop: '20px', textAlign: 'left' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <p><strong>Días dictados:</strong> {totalClasesCurso}</p>
-                  <button className="btn" onClick={exportarPDF} style={{backgroundColor: '#d4af37', width: 'auto', color: 'black'}}>📄 Descargar PDF</button>
+              <div style={{ marginTop: '30px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
+                  <p style={{fontSize: '1.1rem'}}><strong>Días dictados:</strong> {totalClasesCurso}</p>
+                  <button className="btn" onClick={exportarPDF} style={{backgroundColor: '#F6B40E', width: 'auto', color: '#0A4D8C', border: 'none'}}>📄 Descargar PDF</button>
                 </div>
                 <div className="table-responsive">
                   <table>
@@ -648,10 +652,10 @@ function App() {
                         <tr key={alumno.id}>
                           <td><strong>{alumno.apellido}</strong>, {alumno.nombre}</td>
                           <td style={{color: 'green', fontWeight: 'bold'}}>{alumno.presentes}</td>
-                          <td style={{color: 'red'}}>{alumno.ausentes}</td>
-                          <td style={{color: '#f57c00'}}>{alumno.tardes}</td>
+                          <td style={{color: '#c62828', fontWeight: 'bold'}}>{alumno.ausentes}</td>
+                          <td style={{color: '#f57c00', fontWeight: 'bold'}}>{alumno.tardes}</td>
                           <td>
-                            <span className="badge" style={{ backgroundColor: alumno.porcentaje >= 75 ? '#c8e6c9' : alumno.porcentaje >= 50 ? '#fff9c4' : '#ffcdd2', color: alumno.porcentaje >= 75 ? '#2e7d32' : alumno.porcentaje >= 50 ? '#f57f17' : '#c62828' }}>
+                            <span className="badge" style={{ backgroundColor: alumno.porcentaje >= 75 ? '#e8f5e9' : alumno.porcentaje >= 50 ? '#fff3e0' : '#ffebee', color: alumno.porcentaje >= 75 ? '#2e7d32' : alumno.porcentaje >= 50 ? '#e65100' : '#c62828' }}>
                               {alumno.porcentaje}%
                             </span>
                           </td>
@@ -666,13 +670,13 @@ function App() {
         )}
       </div>
 
-      <footer style={{ backgroundColor: '#1a1a1a', color: '#fff', padding: '30px 20px 20px', textAlign: 'center', marginTop: '60px', borderTop: '3px solid #d4af37' }}>
-        <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 La Cueva de Adulam. Todos los derechos reservados.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '25px', paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-          <span style={{ fontSize: '0.8rem', color: '#ccc', textTransform: 'uppercase', letterSpacing: '1px' }}>Desarrollo web con propósito</span>
+      <footer style={{ backgroundColor: '#0A4D8C', color: '#fff', padding: '30px 20px 20px', textAlign: 'center', marginTop: '60px', borderTop: '4px solid #F6B40E' }}>
+        <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 Sistema de Asistencia. Todos los derechos reservados.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '25px', paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+          <span style={{ fontSize: '0.8rem', color: '#E5F0FA', textTransform: 'uppercase', letterSpacing: '1px' }}>Desarrollo web con propósito</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="/logo-agape.png" alt="Logo Código Agape" style={{ width: '35px', height: 'auto', borderRadius: '4px' }} />
-            <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.3rem', color: '#d4af37', fontWeight: 'bold', letterSpacing: '1.5px' }}>CÓDIGO AGAPE</span>
+            <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.3rem', color: '#F6B40E', fontWeight: 'bold', letterSpacing: '1.5px' }}>CÓDIGO AGAPE</span>
           </div>
         </div>
       </footer>
