@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import './App.css';
 
 function App() {
@@ -26,7 +28,7 @@ function App() {
   const [nuevosHorarios, setNuevosHorarios] = useState('');
   const [textoAlumnos, setTextoAlumnos] = useState('');
 
-  // Estados CRUD Instituciones
+  // Estados Instituciones
   const [crudEscuelaId, setCrudEscuelaId] = useState(null);
   const [crudNombre, setCrudNombre] = useState('');
   const [crudCens, setCrudCens] = useState('');
@@ -34,16 +36,19 @@ function App() {
   const [crudDomicilio, setCrudDomicilio] = useState('');
   const [crudLocalidad, setCrudLocalidad] = useState('');
 
-  // Estados Toma de Lista y Reportes
+  // Estados Asistencia y Reportes
   const [escuelaId, setEscuelaId] = useState('');
   const [cursoId, setCursoId] = useState('');
   const [alumnos, setAlumnos] = useState([]);
   const [indiceActual, setIndiceActual] = useState(0);
   const [reporte, setReporte] = useState([]);
   const [nuevoAlumnoNombre, setNuevoAlumnoNombre] = useState('');
+  const [fechaAsistencia, setFechaAsistencia] = useState(new Date().toISOString().split('T')[0]);
+  const [usarVoz, setUsarVoz] = useState(true); // Control global de voz desde el inicio
   
   const [estadisticas, setEstadisticas] = useState([]);
   const [totalClasesCurso, setTotalClasesCurso] = useState(0);
+  const [asistenciasReporte, setAsistenciasReporte] = useState([]);
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -86,7 +91,6 @@ function App() {
 
   const cerrarSesion = async () => await supabase.auth.signOut();
 
-  // --- CRUD INSTITUCIONES ---
   const limpiarFormularioEscuela = () => { setCrudEscuelaId(null); setCrudNombre(''); setCrudCens(''); setCrudSede(''); setCrudDomicilio(''); setCrudLocalidad(''); };
   const guardarEscuela = async () => {
     if (!crudNombre) return alert("El nombre es obligatorio");
@@ -102,14 +106,12 @@ function App() {
     if(confirm("¿Borrar esta institución?")) { await supabase.from('escuelas').delete().eq('id', id); cargarDatosIniciales(session.user.id); }
   };
 
-  // --- CRUD CURSOS ---
   const limpiarFormularioCurso = () => {
     setCrudCursoId(null); setAdminEscuela(''); setNuevaSede(''); setNuevoCurso(''); setNuevaComision(''); setNuevaMateria(''); setNuevosDias(''); setNuevosHorarios(''); setTextoAlumnos('');
   };
 
   const guardarCurso = async () => {
     if (!adminEscuela || !nuevoCurso || !nuevaMateria) return alert("Faltan Institución, Materia y Curso.");
-
     const datosCurso = { 
       escuela_id: adminEscuela, profesor_id: session.user.id, nombre: nuevoCurso, comision: nuevaComision,
       materia: nuevaMateria, sede: nuevaSede, dias: nuevosDias, horarios: nuevosHorarios 
@@ -153,60 +155,169 @@ function App() {
   };
 
   const eliminarCurso = async (id) => {
-    if(confirm("🛑 ¿Seguro que deseas eliminar este curso? Se borrarán todos sus alumnos y las asistencias tomadas.")) {
+    if(confirm("🛑 ¿Seguro que deseas eliminar este curso? Se borrarán todos sus alumnos y asistencias.")) {
       await supabase.from('cursos').delete().eq('id', id); cargarDatosIniciales(session.user.id);
     }
   };
 
-  // --- MOTOR REPORTES Y ASISTENCIA ---
   const generarReporte = async (idCurso) => {
     setCursoId(idCurso); 
-    if (!idCurso) {
-      setEstadisticas([]);
-      return;
-    }
+    if (!idCurso) { setEstadisticas([]); setAsistenciasReporte([]); return; }
 
-    // Traemos datos y capturamos posibles errores
-    const { data: alumnosData, error: errAlumnos } = await supabase.from('alumnos').select('*').eq('curso_id', idCurso).order('apellido', { ascending: true });
-    const { data: asistenciasData, error: errAsistencias } = await supabase.from('asistencias').select('*').eq('curso_id', idCurso);
-
-    if (errAlumnos || errAsistencias) {
-      alert("Error de lectura en Supabase. Verifica que no haya bloqueos de RLS.");
-      return;
-    }
+    const { data: alumnosData } = await supabase.from('alumnos').select('*').eq('curso_id', idCurso).order('apellido', { ascending: true });
+    const { data: asistenciasData } = await supabase.from('asistencias').select('*').eq('curso_id', idCurso);
 
     if (alumnosData && asistenciasData) {
-      let maxClasesTomadas = 0;
+      setAsistenciasReporte(asistenciasData);
+      const fechasUnicas = [...new Set(asistenciasData.map(a => a.fecha))];
+      setTotalClasesCurso(fechasUnicas.length);
+
       const estadisticasCalculadas = alumnosData.map(alumno => {
-        const registrosAlumno = asistenciasData.filter(a => a.alumno_id === alumno.id);
-        const presentes = registrosAlumno.filter(a => a.estado === 'Presente').length;
-        const ausentes = registrosAlumno.filter(a => a.estado === 'Ausente').length;
-        const clasesDelAlumno = presentes + ausentes;
-        
-        if (clasesDelAlumno > maxClasesTomadas) maxClasesTomadas = clasesDelAlumno;
-        
-        const porcentaje = clasesDelAlumno > 0 ? Math.round((presentes / clasesDelAlumno) * 100) : 0;
-        return { ...alumno, presentes, ausentes, porcentaje };
+        const registros = asistenciasData.filter(a => a.alumno_id === alumno.id);
+        const presentes = registros.filter(a => a.estado === 'Presente').length;
+        const ausentes = registros.filter(a => a.estado === 'Ausente').length;
+        const tardes = registros.filter(a => a.estado === 'Tarde').length;
+        const clasesDelAlumno = presentes + ausentes + tardes;
+        const porcentaje = clasesDelAlumno > 0 ? Math.round(((presentes + tardes) / clasesDelAlumno) * 100) : 0;
+        return { ...alumno, presentes, ausentes, tardes, porcentaje };
       });
-      
-      setTotalClasesCurso(maxClasesTomadas); 
       setEstadisticas(estadisticasCalculadas);
     }
   };
 
-  const hablar = (texto) => { if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); const msg = new SpeechSynthesisUtterance(texto); msg.lang = 'es-AR'; window.speechSynthesis.speak(msg); } };
+  const exportarPDF = () => {
+    try {
+      const doc = new jsPDF('landscape');
+      const curso = cursos.find(c => c.id.toString() === cursoId.toString());
+      const escuela = escuelas.find(e => e.id === curso?.escuela_id);
+
+      doc.setFontSize(14);
+      doc.text(`Asistencia: ${curso?.materia || ''} - ${curso?.nombre || ''} (Comisión: ${curso?.comision || '-'})`, 14, 15);
+      doc.setFontSize(10);
+      doc.text(`Institución: ${escuela?.nombre || ''} (CENS ${escuela?.cens || '-'})`, 14, 22);
+
+      const fechasUnicas = [...new Set(asistenciasReporte.map(a => a.fecha))].sort();
+      const headers = [['Apellido y Nombre', ...fechasUnicas.map(f => {
+        if (!f) return '-';
+        const partes = f.split('-'); 
+        return partes.length === 3 ? `${partes[2]}/${partes[1]}` : f;
+      })]];
+
+      const body = estadisticas.map(alumno => {
+        const row = [`${alumno.apellido}, ${alumno.nombre}`];
+        fechasUnicas.forEach(fecha => {
+          const registro = asistenciasReporte.find(a => a.alumno_id === alumno.id && a.fecha === fecha);
+          let letra = '-';
+          if (registro?.estado === 'Presente') letra = 'P';
+          if (registro?.estado === 'Ausente') letra = 'A';
+          if (registro?.estado === 'Tarde') letra = 'T';
+          row.push(letra);
+        });
+        return row;
+      });
+
+      autoTable(doc, { 
+        head: headers, 
+        body: body, 
+        startY: 30, 
+        styles: { fontSize: 8, halign: 'center' }, 
+        columnStyles: { 0: { halign: 'left' } }
+      });
+      
+      doc.save(`Asistencia_${curso?.materia || 'CENS'}.pdf`);
+    } catch (error) {
+      alert("Hubo un error al generar el PDF. Revisa la consola.");
+      console.error(error);
+    }
+  };
+
+  // --- MOTOR DE ASISTENCIA Y VOZ ---
+  const hablar = (texto) => { 
+    if (!usarVoz) return; 
+    if ('speechSynthesis' in window) { 
+      window.speechSynthesis.cancel(); 
+      const msg = new SpeechSynthesisUtterance(texto); 
+      msg.lang = 'es-AR'; 
+      window.speechSynthesis.speak(msg); 
+    } 
+  };
   
   const iniciarAsistenciaDesdeCard = async (curso) => {
-    setCursoId(curso.id); const { data } = await supabase.from('alumnos').select('*').eq('curso_id', curso.id);
-    if (data && data.length > 0) { setAlumnos(data); setReporte([]); setIndiceActual(0); setPantalla('asistencia_activa'); hablar(data[0].nombre_completo); } 
-    else alert("Este curso no tiene alumnos cargados.");
+    setCursoId(curso.id); 
+    setFechaAsistencia(new Date().toISOString().split('T')[0]);
+    const { data } = await supabase.from('alumnos').select('*').eq('curso_id', curso.id).order('apellido', { ascending: true });
+    
+    if (data && data.length > 0) { 
+      setAlumnos(data); setReporte([]); setIndiceActual(0); 
+      setPantalla('asistencia_activa'); 
+      if (usarVoz) hablar(data[0].nombre_completo); 
+    } else alert("Este curso no tiene alumnos cargados.");
+  };
+
+  const editarClasePasada = async (fecha) => {
+    setFechaAsistencia(fecha);
+    const registrosDeEsaFecha = asistenciasReporte.filter(a => a.fecha === fecha);
+    const { data } = await supabase.from('alumnos').select('*').eq('curso_id', cursoId).order('apellido', { ascending: true });
+    
+    setAlumnos(data || []);
+    setReporte(registrosDeEsaFecha.map(r => ({ alumno_id: r.alumno_id, curso_id: r.curso_id, estado: r.estado })));
+    setPantalla('asistencia_revision');
   };
 
   const marcar = (estado) => {
     setReporte([...reporte, { alumno_id: alumnos[indiceActual].id, curso_id: cursoId, estado: estado }]);
     const proximo = indiceActual + 1;
     if (proximo < alumnos.length) { setIndiceActual(proximo); hablar(alumnos[proximo].nombre_completo); } 
-    else finalizarLista();
+    else { hablar("Toma de lista finalizada. Por favor, revisa y guarda."); setPantalla('asistencia_revision'); }
+  };
+
+  const deshacerUltimo = () => { if (indiceActual > 0) { const nuevoReporte = [...reporte]; nuevoReporte.pop(); setReporte(nuevoReporte); setIndiceActual(indiceActual - 1); hablar(alumnos[indiceActual - 1].nombre_completo); } };
+  const cancelarAsistencia = () => { if (confirm("¿Seguro que deseas cancelar? No se guardará nada.")) { setReporte([]); setIndiceActual(0); setPantalla('seleccion_asistencia'); } };
+  
+  const actualizarEstadoRevision = (alumnoId, nuevoEstado) => {
+    setReporte(prev => {
+      const existe = prev.find(r => r.alumno_id === alumnoId);
+      if (existe) return prev.map(r => r.alumno_id === alumnoId ? { ...r, estado: nuevoEstado } : r);
+      return [...prev, { alumno_id: alumnoId, curso_id: cursoId, estado: nuevoEstado }];
+    });
+  };
+
+  const eliminarAlumnoDeCurso = async (idAlumno) => {
+    if (confirm("⚠️ ¿Seguro que deseas eliminar este alumno? Se borrará de la lista permanentemente.")) {
+      await supabase.from('alumnos').delete().eq('id', idAlumno);
+      setAlumnos(alumnos.filter(a => a.id !== idAlumno));
+      setReporte(reporte.filter(r => r.alumno_id !== idAlumno));
+    }
+  };
+
+  const guardarAsistenciaDefinitiva = async () => {
+    if (confirm("¿Confirmar y guardar esta asistencia en la base de datos?")) {
+      const { error: errDelete } = await supabase.from('asistencias').delete().match({ curso_id: cursoId, fecha: fechaAsistencia });
+      if (errDelete) return alert("❌ Error al limpiar base de datos: " + errDelete.message);
+
+      const datosFinales = reporte.map(r => ({ ...r, fecha: fechaAsistencia }));
+      const { error: errInsert } = await supabase.from('asistencias').insert(datosFinales);
+      
+      if (errInsert) {
+        alert("❌ Error al guardar en Supabase: " + errInsert.message);
+      } else {
+        alert("✅ Datos guardados correctamente en la fecha: " + fechaAsistencia);
+        setPantalla('resultados');
+      }
+    }
+  };
+
+  const eliminarListaCompleta = async () => {
+    if (confirm(`⚠️ ATENCIÓN: ¿Seguro que deseas eliminar TODA la asistencia del día ${fechaAsistencia}? Esta acción borrará la columna y no se puede recuperar.`)) {
+      const { error } = await supabase.from('asistencias').delete().match({ curso_id: cursoId, fecha: fechaAsistencia });
+      if (error) {
+        alert("❌ Error al borrar: " + error.message);
+      } else {
+        alert("🗑️ Lista eliminada correctamente.");
+        setPantalla('reportes');
+        generarReporte(cursoId);
+      }
+    }
   };
 
   const agregarAlumnoEnCaliente = async () => {
@@ -216,18 +327,12 @@ function App() {
     if (!error && data) { const nuevaLista = [...alumnos]; nuevaLista.splice(indiceActual + 1, 0, data[0]); setAlumnos(nuevaLista); setNuevoAlumnoNombre(''); alert("Alumno agregado."); }
   };
 
-  const deshacerUltimo = () => { if (indiceActual > 0) { const nuevoReporte = [...reporte]; nuevoReporte.pop(); setReporte(nuevoReporte); setIndiceActual(indiceActual - 1); hablar(alumnos[indiceActual - 1].nombre_completo); } };
-  const cancelarAsistencia = () => { if (confirm("¿Seguro que deseas cancelar? No se guardará ninguna asistencia.")) { setReporte([]); setIndiceActual(0); setPantalla('seleccion_asistencia'); } };
-  const finalizarLista = async () => { hablar("Toma de lista finalizada. Guardando."); setPantalla('resultados'); await supabase.from('asistencias').insert(reporte); };
-
   // ==========================================
   // RENDERIZADO
   // ==========================================
   if (!session) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        
-        {/* Contenedor principal centrado verticalmente */}
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div className="container" style={{ width: '100%', maxWidth: '400px', margin: 0 }}>
             <h1 style={{fontSize: '2rem', marginBottom: '20px'}}>{modoRegistro ? 'Registro Docente 📝' : 'Acceso CENS 👨‍🏫'}</h1>
@@ -243,10 +348,8 @@ function App() {
             </button>
           </div>
         </main>
-
-        {/* FOOTER CÓDIGO AGAPE */}
         <footer style={{ backgroundColor: '#1a1a1a', color: '#fff', padding: '30px 20px 20px', textAlign: 'center', borderTop: '3px solid #d4af37' }}>
-          <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 Todos los derechos reservados.</p>
+          <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 La Cueva de Adulam. Todos los derechos reservados.</p>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px', paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <span style={{ fontSize: '0.8rem', color: '#ccc', textTransform: 'uppercase', letterSpacing: '1px' }}>Desarrollo web con propósito</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -255,7 +358,6 @@ function App() {
             </div>
           </div>
         </footer>
-        
       </div>
     );
   }
@@ -275,16 +377,27 @@ function App() {
         
         {pantalla === 'menu' && (
           <div>
-            {/* AQUÍ ESTÁ EL HERO BANNER */}
             <div className="hero-banner">
               <h1>Sistema de Asistencia</h1>
               <p>Herramienta de gestión para docentes de Educación de Jóvenes y Adultos.</p>
             </div>
             
-            <div style={{ backgroundColor: '#e3f2fd', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #90caf9', textAlign: 'left' }}>
+            <div style={{ backgroundColor: '#e3f2fd', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #90caf9', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <p style={{ margin: 0, color: '#0d47a1', fontSize: '1.1rem' }}>👨‍🏫 <strong>Profesor activo:</strong> {session?.user?.email}</p>
+              
+              {/* INTERRUPTOR DE VOZ EN LA PÁGINA PRINCIPAL */}
+              <button 
+                onClick={() => setUsarVoz(!usarVoz)}
+                style={{
+                  padding: '8px 15px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer',
+                  backgroundColor: usarVoz ? '#c8e6c9' : '#ffcdd2', 
+                  color: usarVoz ? '#2e7d32' : '#c62828'
+                }}
+              >
+                {usarVoz ? '🔊 Voz: ACTIVADA' : '🔇 Voz: SILENCIADA'}
+              </button>
             </div>
-            
+
             <div className="cards-grid">
               <button className="curso-card" style={{justifyContent: 'center', alignItems: 'center', backgroundColor: '#e8f5e9'}} onClick={() => {limpiarFormularioCurso(); setPantalla('admin');}}>
                 <h3 style={{color: '#2e7d32'}}>➕ Gestionar Cursos</h3>
@@ -333,7 +446,6 @@ function App() {
           </div>
         )}
 
-        {/* AQUÍ ESTÁ EL CRUD DE CURSOS */}
         {pantalla === 'admin' && (
           <div>
             <h2>Gestión de Cursos</h2>
@@ -345,26 +457,21 @@ function App() {
               </select>
               <input type="text" placeholder="Sede / Anexo" value={nuevaSede} onChange={e => setNuevaSede(e.target.value)} />
               <input type="text" placeholder="Materia" value={nuevaMateria} onChange={e => setNuevaMateria(e.target.value)} />
-              
               <div style={{display: 'flex', gap: '10px'}}>
                 <input type="text" placeholder="Año/Div (ej. 1°A)" value={nuevoCurso} onChange={e => setNuevoCurso(e.target.value)} style={{flex: 1}} />
                 <input type="text" placeholder="Comisión (ej. Com 1)" value={nuevaComision} onChange={e => setNuevaComision(e.target.value)} style={{flex: 1}} />
               </div>
-
               <input type="text" placeholder="Días" value={nuevosDias} onChange={e => setNuevosDias(e.target.value)} />
               <input type="text" placeholder="Horarios" value={nuevosHorarios} onChange={e => setNuevosHorarios(e.target.value)} />
-              
               {!crudCursoId && (
                 <div style={{border: '2px dashed #ccc', padding: '15px', marginTop: '15px', borderRadius: '8px'}}>
                   <p style={{margin: '0 0 10px 0', fontWeight: 'bold'}}>📋 Copia y pega aquí la lista de alumnos</p>
                   <textarea rows="6" value={textoAlumnos} onChange={e => setTextoAlumnos(e.target.value)} style={{width: '100%', padding: '10px', boxSizing: 'border-box'}} />
                 </div>
               )}
-              
               <button className="btn btn-green" onClick={guardarCurso}>{crudCursoId ? 'Actualizar Curso' : 'Guardar Curso y Alumnos'}</button>
               {crudCursoId && <button className="btn btn-gray" onClick={limpiarFormularioCurso}>Cancelar Edición</button>}
             </div>
-
             <div style={{ textAlign: 'left' }}>
               <h3>Mis Cursos ({cursos.length})</h3>
               {cursos.map(cur => (
@@ -402,11 +509,9 @@ function App() {
                         <strong>🏫 Inst:</strong> {escuela?.nombre} {escuela?.cens ? `(CENS ${escuela.cens})` : ''}<br/>
                         <strong>📍 Sede:</strong> {cur.sede}<br/>
                         <strong>📖 Curso:</strong> {cur.nombre} {cur.comision ? `| Com: ${cur.comision}` : ''}<br/>
-                        <strong>📅 Días:</strong> {cur.dias}<br/>
-                        <strong>⏰ Horario:</strong> {cur.horarios}
                       </div>
                       <button className="btn btn-blue" style={{marginTop: 'auto', width: '100%', borderRadius: '8px'}} onClick={() => iniciarAsistenciaDesdeCard(cur)}>
-                        ▶ Tomar Lista
+                        ▶ Tomar Lista de Hoy
                       </button>
                     </div>
                   );
@@ -418,11 +523,13 @@ function App() {
 
         {pantalla === 'asistencia_activa' && (
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            
             <h2 className="alumno-display" style={{ margin: '0 0 10px 0', color: '#333' }}>{alumnos[indiceActual]?.nombre_completo}</h2>
-            <p style={{ color: '#666', marginBottom: '25px' }}>DNI: {alumnos[indiceActual]?.dni || 'No registrado'} | Alumno {indiceActual + 1} de {alumnos.length}</p>
+            <p style={{ color: '#666', marginBottom: '25px' }}>Alumno {indiceActual + 1} de {alumnos.length} {usarVoz ? '🔊 (Voz activa)' : '🔇 (Silenciado)'}</p>
             
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
               <button className="btn btn-green" style={{ flex: 1, padding: '15px', fontSize: '1.1rem' }} onClick={() => marcar('Presente')}>PRESENTE</button>
+              <button className="btn btn-blue" style={{ flex: 1, padding: '15px', fontSize: '1.1rem', backgroundColor: '#f57c00' }} onClick={() => marcar('Tarde')}>TARDE</button>
               <button className="btn btn-red" style={{ flex: 1, padding: '15px', fontSize: '1.1rem' }} onClick={() => marcar('Ausente')}>AUSENTE</button>
             </div>
 
@@ -434,7 +541,51 @@ function App() {
             <hr style={{margin: '30px 0'}} />
             <h4>¿Llegó un alumno nuevo?</h4>
             <input type="text" placeholder="Apellido y Nombre" value={nuevoAlumnoNombre} onChange={e => setNuevoAlumnoNombre(e.target.value)} />
-            <button className="btn btn-gray" onClick={agregarAlumnoEnCaliente}>Agregar ahora</button>
+            <button className="btn btn-gray" onClick={agregarAlumnoEnCaliente}>Agregar a la lista ahora</button>
+          </div>
+        )}
+
+        {pantalla === 'asistencia_revision' && (
+          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ color: '#1976d2', marginTop: 0 }}>Revisar Asistencia</h2>
+            <div style={{marginBottom: '20px', textAlign: 'left', backgroundColor: '#e3f2fd', padding: '15px', borderRadius: '8px'}}>
+              <label style={{fontWeight: 'bold'}}>📅 Fecha a guardar: </label>
+              <input type="date" value={fechaAsistencia} onChange={e => setFechaAsistencia(e.target.value)} style={{padding: '8px', borderRadius: '5px', border: '1px solid #ccc', marginLeft: '10px'}}/>
+            </div>
+            
+            <div className="table-responsive">
+              <table>
+                <thead>
+                  <tr><th>Alumno</th><th>Estado</th><th>Eliminar</th></tr>
+                </thead>
+                <tbody>
+                  {alumnos.map(al => {
+                    const estadoActual = reporte.find(r => r.alumno_id === al.id)?.estado || 'Ausente';
+                    return (
+                      <tr key={al.id}>
+                        <td>{al.apellido}, {al.nombre}</td>
+                        <td>
+                          <select value={estadoActual} onChange={(e) => actualizarEstadoRevision(al.id, e.target.value)} style={{margin: 0, padding: '5px'}}>
+                            <option value="Presente">Presente</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Ausente">Ausente</option>
+                          </select>
+                        </td>
+                        <td>
+                          <button className="btn btn-red" style={{padding: '5px', margin: 0, width: 'auto'}} onClick={() => eliminarAlumnoDeCurso(al.id)}>🗑️</button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
+              <button className="btn btn-green" onClick={guardarAsistenciaDefinitiva} style={{flex: 2, minWidth: '200px'}}>💾 CONFIRMAR Y GUARDAR</button>
+              <button className="btn btn-gray" onClick={cancelarAsistencia} style={{flex: 1, minWidth: '100px'}}>Descartar</button>
+              <button className="btn btn-red" onClick={eliminarListaCompleta} style={{flex: 1, minWidth: '100px'}}>🗑️ Borrar Lista</button>
+            </div>
           </div>
         )}
 
@@ -450,54 +601,47 @@ function App() {
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
             <h2 style={{marginTop: 0}}>Reportes del Cuatrimestre</h2>
             
-            <select 
-              value={escuelaId} 
-              onChange={e => {
-                setEscuelaId(e.target.value);
-                setCursoId(''); // Forzamos limpieza del curso al cambiar de escuela
-                setEstadisticas([]); // Limpiamos la tabla
-              }}
-            >
+            <select value={escuelaId} onChange={e => { setEscuelaId(e.target.value); setCursoId(''); setEstadisticas([]); }}>
               <option value="">-- Filtrar por Institución (Opcional) --</option>
               {escuelas.map(esc => <option key={esc.id} value={esc.id}>{esc.nombre}</option>)}
             </select>
 
-            <select 
-              value={cursoId} 
-              onChange={e => generarReporte(e.target.value)}
-            >
-              <option value="">-- Seleccionar Curso para ver métricas --</option>
-              {cursos
-                .filter(c => escuelaId ? c.escuela_id.toString() === escuelaId : true)
-                .map(cur => (
-                  <option key={cur.id} value={cur.id}>
-                    {cur.materia} - {cur.nombre} {cur.comision ? `(Com: ${cur.comision})` : ''}
-                  </option>
+            <select value={cursoId} onChange={e => generarReporte(e.target.value)}>
+              <option value="">-- Seleccionar Curso --</option>
+              {cursos.filter(c => escuelaId ? c.escuela_id.toString() === escuelaId : true).map(cur => (
+                  <option key={cur.id} value={cur.id}>{cur.materia} - {cur.nombre} {cur.comision ? `(Com: ${cur.comision})` : ''}</option>
               ))}
             </select>
 
-            {/* AVISO: Si elegimos un curso pero no tiene alumnos */}
-            {cursoId && estadisticas.length === 0 && (
-              <div style={{ padding: '20px', backgroundColor: '#fff3e0', marginTop: '20px', borderRadius: '8px', border: '1px solid #ffcc80' }}>
-                <p style={{ margin: 0, color: '#e65100' }}>
-                  <strong>No hay datos:</strong> Este curso no tiene alumnos registrados aún. Ve a "Gestionar Cursos" para agregar la lista.
-                </p>
+            {cursoId && estadisticas.length > 0 && (
+              <div style={{ marginTop: '20px', textAlign: 'left', backgroundColor: '#f5f5f5', padding: '15px', borderRadius: '8px' }}>
+                <p style={{margin: '0 0 10px 0', fontWeight: 'bold'}}>✏️ Editar o borrar una clase pasada:</p>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {[...new Set(asistenciasReporte.map(a => a.fecha))].sort().map(f => (
+                    <button key={f} onClick={() => editarClasePasada(f)} className="btn btn-blue" style={{width: 'auto', padding: '8px 12px', margin: 0, fontSize: '0.9rem'}}>
+                      {f.split('-')[2]}/{f.split('-')[1]}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* TABLA: Se muestra solo si hay alumnos procesados */}
+            {cursoId && estadisticas.length === 0 && (
+              <div style={{ padding: '20px', backgroundColor: '#fff3e0', marginTop: '20px', borderRadius: '8px', border: '1px solid #ffcc80' }}>
+                <p style={{ margin: 0, color: '#e65100' }}><strong>No hay datos:</strong> Este curso no tiene alumnos registrados aún.</p>
+              </div>
+            )}
+
             {estadisticas.length > 0 && (
               <div style={{ marginTop: '20px', textAlign: 'left' }}>
-                <p><strong>Clases dictadas (Días evaluados max):</strong> {totalClasesCurso}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <p><strong>Días dictados:</strong> {totalClasesCurso}</p>
+                  <button className="btn" onClick={exportarPDF} style={{backgroundColor: '#d4af37', width: 'auto', color: 'black'}}>📄 Descargar PDF</button>
+                </div>
                 <div className="table-responsive">
                   <table>
                     <thead>
-                      <tr>
-                        <th>Apellido y Nombre</th>
-                        <th>Presentes</th>
-                        <th>Ausentes</th>
-                        <th>% Asistencia</th>
-                      </tr>
+                      <tr><th>Alumno</th><th>P</th><th>A</th><th>T</th><th>%</th></tr>
                     </thead>
                     <tbody>
                       {estadisticas.map(alumno => (
@@ -505,11 +649,9 @@ function App() {
                           <td><strong>{alumno.apellido}</strong>, {alumno.nombre}</td>
                           <td style={{color: 'green', fontWeight: 'bold'}}>{alumno.presentes}</td>
                           <td style={{color: 'red'}}>{alumno.ausentes}</td>
+                          <td style={{color: '#f57c00'}}>{alumno.tardes}</td>
                           <td>
-                            <span className="badge" style={{
-                              backgroundColor: alumno.porcentaje >= 75 ? '#c8e6c9' : alumno.porcentaje >= 50 ? '#fff9c4' : '#ffcdd2',
-                              color: alumno.porcentaje >= 75 ? '#2e7d32' : alumno.porcentaje >= 50 ? '#f57f17' : '#c62828'
-                            }}>
+                            <span className="badge" style={{ backgroundColor: alumno.porcentaje >= 75 ? '#c8e6c9' : alumno.porcentaje >= 50 ? '#fff9c4' : '#ffcdd2', color: alumno.porcentaje >= 75 ? '#2e7d32' : alumno.porcentaje >= 50 ? '#f57f17' : '#c62828' }}>
                               {alumno.porcentaje}%
                             </span>
                           </td>
@@ -525,7 +667,7 @@ function App() {
       </div>
 
       <footer style={{ backgroundColor: '#1a1a1a', color: '#fff', padding: '30px 20px 20px', textAlign: 'center', marginTop: '60px', borderTop: '3px solid #d4af37' }}>
-        <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 Todos los derechos reservados.</p>
+        <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem' }}>© 2026 La Cueva de Adulam. Todos los derechos reservados.</p>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '25px', paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
           <span style={{ fontSize: '0.8rem', color: '#ccc', textTransform: 'uppercase', letterSpacing: '1px' }}>Desarrollo web con propósito</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
