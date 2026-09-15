@@ -323,7 +323,13 @@ function App() {
     if (!nuevoAlumnoNombre) return;
     const partes = nuevoAlumnoNombre.split(' '); const apellidoExtraido = partes.shift() || ''; const nombreExtraido = partes.join(' ') || '';
     const { data, error } = await supabase.from('alumnos').insert([{ nombre_completo: nuevoAlumnoNombre, apellido: apellidoExtraido, nombre: nombreExtraido, curso_id: cursoId }]).select();
-    if (!error && data) { const nuevaLista = [...alumnos]; nuevaLista.splice(indiceActual + 1, 0, data[0]); setAlumnos(nuevaLista); setNuevoAlumnoNombre(''); alert("Alumno agregado."); }
+    if (!error && data) { 
+      const nuevaListaOrdenada = [...alumnos, data[0]].sort((a, b) => a.apellido.localeCompare(b.apellido));
+      setAlumnos(nuevaListaOrdenada); 
+      setReporte([...reporte, { alumno_id: data[0].id, curso_id: cursoId, estado: 'Presente' }]);
+      setNuevoAlumnoNombre(''); 
+      alert("Alumno agregado correctamente."); 
+    }
   };
 
   if (!session) {
@@ -376,9 +382,9 @@ function App() {
             <div className="hero-bandera">
               <div className="sol-de-mayo"></div>
               <div className="hero-content">
-                <img src="/logo-agape.png" alt="Logo Código Agape" style={{ width: '65px', height: 'auto', marginBottom: '8px', borderRadius: '8px' }} />
-                <h1 style={{ color: '#0A4D8C', margin: '0 0 5px 0', textShadow: 'none' }}>Sistema de Asistencia</h1>
-                <p style={{ color: '#0A4D8C', fontWeight: 'bold', margin: 0 }}>Herramienta de gestión para docentes de Educación de Jóvenes y Adultos.</p>
+                <img src="/logo-agape.png" alt="Logo Código Agape" style={{ width: '70px', height: 'auto', marginBottom: '10px', borderRadius: '8px' }} />
+                <h1 style={{ color: '#0A4D8C', margin: 0, textShadow: 'none' }}>Sistema de Asistencia</h1>
+                <p style={{ color: '#0A4D8C', fontWeight: 'bold' }}>Herramienta de gestión para docentes de Educación de Jóvenes y Adultos.</p>
               </div>
             </div>
             
@@ -557,6 +563,21 @@ function App() {
               <input type="date" value={fechaAsistencia} onChange={e => setFechaAsistencia(e.target.value)} style={{padding: '8px', borderRadius: '5px', border: '1px solid #ccc', marginLeft: '10px', width: 'auto'}}/>
             </div>
             
+            {/* SECCIÓN NUEVA: AGREGAR ALUMNO EN REVISIÓN */}
+            <div style={{marginBottom: '25px', textAlign: 'left', backgroundColor: '#e3f2fd', padding: '15px', borderRadius: '8px', border: '1px solid #bbdefb'}}>
+              <label style={{fontWeight: 'bold', color: '#0d47a1', display: 'block', marginBottom: '8px'}}>➕ Agregar Estudiante Nuevo:</label>
+              <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                <input 
+                  type="text" 
+                  placeholder="Apellido y Nombre (ej: PEREZ, Juan)" 
+                  value={nuevoAlumnoNombre} 
+                  onChange={e => setNuevoAlumnoNombre(e.target.value)} 
+                  style={{margin: 0, flex: 2, minWidth: '220px', backgroundColor: 'white'}} 
+                />
+                <button className="btn btn-green" onClick={agregarAlumnoEnCaliente} style={{margin: 0, flex: 1, minWidth: '130px'}}>Agregar</button>
+              </div>
+            </div>
+
             <div className="table-responsive">
               <table>
                 <thead>
