@@ -315,3 +315,22 @@ tr:hover {
   0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.85; }
   100% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
 }
+
+/* Colores personalizados para los selectores de estado en la revisión */
+select[value="Presente"] {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+  font-weight: bold;
+}
+
+select[value="Ausente"] {
+  background-color: #c62828 !important;
+  color: #ffffff !important;
+  font-weight: bold;
+}
+
+select[value="Tarde"] {
+  background-color: #fff3e0 !important;
+  color: #ef6c00 !important;
+  font-weight: bold;
+}

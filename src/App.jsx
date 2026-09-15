@@ -221,7 +221,23 @@ function App() {
         body: body, 
         startY: 30, 
         styles: { fontSize: 8, halign: 'center' }, 
-        columnStyles: { 0: { halign: 'left' } }
+        columnStyles: { 0: { halign: 'left' } },
+        didParseCell: function (data) {
+          // Pintar las letras P (Verde), A (Rojo), T (Naranja) en el PDF
+          if (data.section === 'body' && data.column.index > 0) {
+            const val = data.cell.raw;
+            if (val === 'P') {
+              data.cell.styles.textColor = [46, 125, 50]; // Verde
+              data.cell.styles.fontStyle = 'bold';
+            } else if (val === 'A') {
+              data.cell.styles.textColor = [198, 40, 40]; // Rojo
+              data.cell.styles.fontStyle = 'bold';
+            } else if (val === 'T') {
+              data.cell.styles.textColor = [239, 108, 0]; // Naranja
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        }
       });
       
       doc.save(`Asistencia_${curso?.materia || 'CENS'}.pdf`);
@@ -563,7 +579,6 @@ function App() {
               <input type="date" value={fechaAsistencia} onChange={e => setFechaAsistencia(e.target.value)} style={{padding: '8px', borderRadius: '5px', border: '1px solid #ccc', marginLeft: '10px', width: 'auto'}}/>
             </div>
             
-            {/* SECCIÓN NUEVA: AGREGAR ALUMNO EN REVISIÓN */}
             <div style={{marginBottom: '25px', textAlign: 'left', backgroundColor: '#e3f2fd', padding: '15px', borderRadius: '8px', border: '1px solid #bbdefb'}}>
               <label style={{fontWeight: 'bold', color: '#0d47a1', display: 'block', marginBottom: '8px'}}>➕ Agregar Estudiante Nuevo:</label>
               <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
