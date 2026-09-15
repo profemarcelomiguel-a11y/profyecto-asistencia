@@ -334,3 +334,36 @@ select[value="Tarde"] {
   color: #ef6c00 !important;
   font-weight: bold;
 }
+
+/* =========================================
+   ESTILOS DINÁMICOS PARA SELECTS DE ASISTENCIA
+   ========================================= */
+
+/* Estilo general para los selectores de estado en las tablas */
+td select {
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 6px 10px;
+  transition: all 0.2s ease;
+}
+
+/* Cuando el select tiene seleccionado "Presente" */
+td select option[value="Presente"],
+td select:has(option[value="Presente"]:checked) {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+/* Cuando el select tiene seleccionado "Ausente" */
+td select option[value="Ausente"],
+td select:has(option[value="Ausente"]:checked) {
+  background-color: #c62828 !important;
+  color: #ffffff !important;
+}
+
+/* Cuando el select tiene seleccionado "Tarde" */
+td select option[value="Tarde"],
+td select:has(option[value="Tarde"]:checked) {
+  background-color: #fff3e0 !important;
+  color: #ef6c00 !important;
+}
